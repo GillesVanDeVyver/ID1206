@@ -1,0 +1,3 @@
+gcc -c buddy.c
+gcc -o test.o buddy.o test.c -lm
+./test.o
