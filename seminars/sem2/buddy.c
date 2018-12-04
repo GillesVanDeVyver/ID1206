@@ -106,6 +106,13 @@ void bfree(void *memory) {
     return;
 }
 
+void unlink(struct head* block) {
+  if (block->prev == NULL) {
+    flists[block->level] = block->next;
+    if ()
+  }
+}
+
 void split_up(int level, int goal) {
     if(level <= goal){
       return;
@@ -177,7 +184,7 @@ void insert(struct head *block) {
     struct head *bud = buddy(block);
     struct head *prim = primary(block);
     /*
-        When you don't have a free buddy
+        When you don't have a free buddy, or the free buddy is on another level
         Add just the requested block to the free list
         Without any consideration of their buddy
         Their buddy is on another level
@@ -194,11 +201,93 @@ void insert(struct head *block) {
         When you have the buddy and the primary.
         Add to the free list but as merged
       */
-        if(prim->prev == NULL /*&& bud->level == block->level*/){
+      /*if (prim == block) {
+        if (prim->prev == NULL) {
+          if (bud->next == NULL) {
+            bud->prev->next = NULL;
+            bud->prev = NULL;
+          } else {
+            bud->prev->next = bud->next->prev;
+            bud->next->prev = bud->prev->next;
+            bud->prev = NULL;
+            bud->next = NULL;
+          }
+          prim->next->prev = NULL;
+          prim->next = NULL;
+        } else if (prim->next == NULL) {
+          if (bud->prev == NULL) {
+            bud->next->prev = NULL;
+            bud->next = NULL;
+          }
+          prim->prev->next = NULL;
+          prim->prev = NULL;
+        } else {
+          if (bud->next == NULL) {
+            bud->prev->next = NULL;
+            bud->prev = NULL;
+          } else if (bud->prev == NULL) {
+            bud->next->prev = NULL;
+            bud->next = NULL;
+          }
+          prim->prev->next = prim->next->prev;
+          prim->next->prev = prim->prev->next;
+          prim->next = NULL;
+          prim->prev = NULL;
+        }
+      } else if (prim == bud) {
+        if (prim->prev == NULL) {
+          if (block->next == NULL) {
+            block->prev->next = NULL;
+            block->prev = NULL;
+          } else {
+            block->prev->next = block->next->prev;
+            block->next->prev = block->prev->next;
+            block->prev = NULL;
+            block->next = NULL;
+          }
+          prim->next->prev = NULL;
+          prim->next = NULL;
+        } else if (prim->next == NULL) {
+          if (block->prev == NULL) {
+            block->next->prev = NULL;
+            block->next = NULL;
+          }
+          prim->prev->next = NULL;
+          prim->prev = NULL;
+        } else {
+          if (block->next == NULL) {
+            block->prev->next = NULL;
+            block->prev = NULL;
+          } else if (bud->prev == NULL) {
+            block->next->prev = NULL;
+            block->next = NULL;
+          }
+          prim->prev->next = prim->next->prev;
+          prim->next->prev = prim->prev->next;
+          prim->next = NULL;
+          prim->prev = NULL;
+        }
+      }
+      prim->level++;
+      flists[level++] = prim->next;
+      if (flists[level++] != NULL) {
+        flists[level++]->next->prev = prim;
+        prim->next = flists[level++]->next;
+      } else {
+        prim->next = NULL;
+      }
+      flists[level++] = prim;
+      prim->prev = flists[level++];
+
+      insert(prim);
+    }*/
+      if(prim->prev == NULL){             //&& bud->level == block->level
           flists[level] = prim->next;
           if(flists[level] != NULL){
             prim->next->prev = NULL;
           }
+        } else if (prim->next == NULL) {
+
         }
         prim->level = level + 1;
         insert(prim);
@@ -224,6 +313,8 @@ void test_headers(struct head *mem) {
     printf("mem->level:  %d (%d KB)\n", mem->level, (int) pow(2, mem->level+MIN));
     printf("mem->next:   %p\n", mem->next);
     printf("mem->prev:   %p\n", mem->prev);
+    printf("Buddy memory: %p\n", buddy(mem));
+    printf("Primary: %p\n", primary(mem));
 }
 
 void print_mem() {
@@ -273,18 +364,30 @@ void test() {
 
 void test2() {
   insert(new());
+  insert(new());
+  insert(new());
   char *myMem = balloc(20*sizeof(int));
-  char *myMem2 = balloc(40*sizeof(int));
+  char *myMem1 = balloc(20*sizeof(int));
+  char *myMem2 = balloc(20*sizeof(int));
+  char *myMem3 = balloc(20*sizeof(int));
+  char *myMem4 = balloc(40*sizeof(int));
+  char *myMem5 = balloc(6*sizeof(int));
   printf("==== HEADER TESTS ====\n\n");
   printf("THIS IS THE BLOCK THAT I GOT TO MY MEMORY:");
   test_headers(magic((struct head*)myMem));
+  test_headers(magic((struct head*)myMem1));
   test_headers(magic((struct head*)myMem2));
+  test_headers(magic((struct head*)myMem3));
+  test_headers(magic((struct head*)myMem4));
+  test_headers(magic((struct head*)myMem5));
   print_mem();
   printf("\n");
   printf("\n==== FREEING MEMORY ======");
-  bfree(myMem2);
-  print_mem();
   bfree(myMem);
+  bfree(myMem1);
+  bfree(myMem2);
+  bfree(myMem3);
+  bfree(myMem4);
+  bfree(myMem5);
   print_mem();
-
 }
