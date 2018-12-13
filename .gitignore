@@ -3,3 +3,8 @@
 .DS_Store
 cmake-build-debug
 boot.bin
+cm_test
+m_test
+test.sh
+debug.sh
+c_test

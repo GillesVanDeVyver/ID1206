@@ -1,0 +1,4 @@
+gcc -c green.c
+gcc bench.c -o bench.o green.o -lpthread -lm
+
+./bench.o
