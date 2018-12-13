@@ -126,9 +126,7 @@ void green_thread() {
 
   // Place waiting (joining) thread in ready queue
   if (this->join != NULL) {
-    green_t *thread = this->join;
-    this->join = this->join->next;
-    enqueue(&readyQueue, thread);
+    enqueue(&readyQueue, this->join);
   }
 
   // Free allocated memory structures
@@ -163,9 +161,7 @@ int green_join(green_t *thread) {
 
   // add susp to the ready queue
   green_t *susp = running;
-  if (this->join != NULL) {
-    enqueue(&readyQueue, this->join);
-  }
+  thread->join = susp;
 
   // select the next thread for execution
   green_t *next = dequeue(&readyQueue);
@@ -185,14 +181,25 @@ void green_cond_init(green_cond_t *cond) {
 }
 
 /* Suspends the process on the condition variable */
-void green_cond_wait(green_cond_t *cond) {
+void green_cond_wait(green_cond_t *cond, green_mutex_t *mutex) {
   //Block timer interrupt
   sigprocmask(SIG_BLOCK, &block, NULL);
+
   // The currently running one will be suspended
   green_t *susp = running;
 
   // Add the suspended thread to the list
   enqueue(&cond->waiting, susp);
+
+  //If we have a mutex
+  if (mutex != NULL) {
+    //Release the lock
+    mutex->taken = FALSE;
+
+    //Schedule suspended threads (move to ready)
+    enqueue(&readyQueue, mutex->susp);
+    mutex->susp = NULL;
+  }
 
   // Find next to run and run it.
   green_t *next = dequeue(&readyQueue);
@@ -200,6 +207,19 @@ void green_cond_wait(green_cond_t *cond) {
   running = next;
   cond->num_susp++;
   swapcontext(susp->context, next->context);
+
+  if (mutex != NULL) {
+    //Try to take the lock
+    while (mutex->taken) {
+      //Suspend
+      green_t *susp = running;
+      enqueue(&mutex->susp, susp);
+      running = next;
+      swapcontext(susp->context, next->context);
+    }
+    mutex->taken = TRUE;
+  }
+  sigprocmask(SIG_UNBLOCK, &block, NULL);
 }
 
 /* Signals the next waiting on the variable */

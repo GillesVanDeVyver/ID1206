@@ -24,7 +24,6 @@ void *mutex_test(void *arg) {
   int id = *(int *) arg;
   int incr = 1000000;
 
-  printf("Thread %d adds %d to shared counter.\n", id, incr);
   for(int i = 0; i < 100000; i++);
   for (int i = 0; i < incr; i++) {
     green_mutex_lock(&mutex);
@@ -39,8 +38,29 @@ void *mutex_test(void *arg) {
   }
 }
 
-int flag = 0;
-green_cond_t cond;
+static green_cond_t cond;
+static green_mutex_t cond_mutex;
+static int flag = 0;
+
+void *mutex_cond_test(void *arg) {
+  int id = *(int *) arg;
+  int loop = 10;
+  while (loop > 0) {
+    green_mutex_lock(&cond_mutex);
+    while (1) {
+      if (flag == id) {
+        printf("Thread %d: %d\n", id, loop);
+        flag = (id + 1) % 3;
+        green_cond_signal(&cond);
+        green_mutex_unlock(&cond_mutex);
+        break;
+      } else {
+        green_cond_wait(&cond, &cond_mutex);
+      }
+    }
+    loop--;
+  }
+}
 
 void *test_cond(void *arg) {
     int id = *(int *) arg;
@@ -52,7 +72,7 @@ void *test_cond(void *arg) {
             flag = (id + 1) % 3;
             green_cond_signal(&cond);
         } else {
-            green_cond_wait(&cond);
+            green_cond_wait(&cond, &cond_mutex);
         }
     }
 }
@@ -69,10 +89,23 @@ int main() {
   //green_create(&g2, test, &a2);
 
   //Condition test
-  //green_cond_init(&cond);
-  /*green_create(&g0, test_cond, &a0);
+  /*green_cond_init(&cond);
+  green_create(&g0, test_cond, &a0);
   green_create(&g1, test_cond, &a1);
-  green_create(&g2, test_cond, &a2);*/
+  green_create(&g2, test_cond, &a2);
+  green_join(&g0);
+  green_join(&g1);
+  green_join(&g2);*/
+
+  //Condition and mutex test
+  /*green_mutex_init(&cond_mutex);
+  green_cond_init(&cond);
+  green_create(&g0, mutex_cond_test, &a0);
+  green_create(&g1, mutex_cond_test, &a1);
+  green_create(&g2, mutex_cond_test, &a2);
+  green_join(&g0);
+  green_join(&g1);
+  green_join(&g2);*/
 
   //Mutex lock
   green_mutex_init(&mutex);
