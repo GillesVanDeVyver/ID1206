@@ -1,10 +1,13 @@
-#include <stdio.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <math.h>
 #include "buddy.h"
 
-int main(int argc, char *argv[]){
-  //test();
 
-  test2();
+int main(int argc, char *argv[]) {
+
+  test();
+
   return 0;
 }

@@ -1,0 +1,6 @@
+# Block size: 32, Number of iterations: 10000
+#Iterations	Block size	Balloc time	Malloc time	Difference
+32	10000	0.643000	0.289000	0.354000
+0
+0
+0

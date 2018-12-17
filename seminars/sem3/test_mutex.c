@@ -4,7 +4,7 @@
 
 volatile int shared_counter = 0;
 green_mutex_t mutex;
-
+int zero, one, two;
 void *mutex_test(void *arg) {
   int id = *(int *) arg;
   int incr = 1000000;
@@ -12,6 +12,13 @@ void *mutex_test(void *arg) {
   for(int i = 0; i < 100000; i++);
   for (int i = 0; i < incr; i++) {
     green_mutex_lock(&mutex);
+    if (id == 0) {
+      zero++;
+    } else if (id == 1) {
+      one++;
+    } else {
+      two++;
+    }
     shared_counter++;
     green_mutex_unlock(&mutex);
   }

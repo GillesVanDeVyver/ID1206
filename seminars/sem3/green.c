@@ -70,7 +70,6 @@ void timer_handler (int sig) {
 */
 green_t *dequeue(green_t **list) {
   if (*list == NULL) {
-    printf("Emil this happened at line 71...\n");
     return NULL;
   } else {
     green_t *thread = *list;
